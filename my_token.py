@@ -1,13 +1,13 @@
 
-#my_token
+#my_token.py
 
 #Smart Contract State
 S = Hash(default_value=0)
 
 #This runs when our contract is created on the blockchain, and never again.
 @construct
-def seed():
-    S['me'] = 50
+def seed(vk: str, amount: int):
+    S[vk] = amount
 
 #This method will be exported so our users can call it
 @export
@@ -26,5 +26,5 @@ def transfer(amount: int, receiver: str):
     #deducte the tokens from the sender's balance
     S[sender] -= amount
 
-    #add tokens to the reciever's balance
+    #add tokens to the receiver's balance
     S[receiver] += amount

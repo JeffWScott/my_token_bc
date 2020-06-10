@@ -11,7 +11,7 @@ client = ContractingClient()
 
 with open('my_token.py') as f:
     code = f.read()
-    client.submit(code, name='my_token')
+    client.submit(code, name='my_token', constructor_args={'vk': 'me', 'amount': 50})
 
 app = Sanic("contracting server")
 CORS(app)
