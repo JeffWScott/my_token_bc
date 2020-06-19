@@ -17,6 +17,7 @@
 	}
 
 	const updateTau = (data) => {
+		console.log(data)
 		let status = data.txBlockResult.status
 		if (status === 0) refreshTAUBalance();
 	}
@@ -44,14 +45,12 @@
 		font-weight: 300;
 		font-size: 2em;
 		width: -moz-fit-content;
+		cursor: pointer;
 	}
 	.brand > img {
 		width: 50px;
 		min-width: 50px;
 		margin-right: 8px;
-	}
-	h2{
-		margin: 0;
 	}
 	.account{
 		color: #161454;
@@ -88,7 +87,7 @@
 </style>
 
 <nav>
-	<div class="brand">
+	<div class="brand" on:click={logout}>
 		<img alt='Token' src='token.png'>
 		<p style={"min-width: -moz-fit-content;"}>My Token</p>
 	</div>

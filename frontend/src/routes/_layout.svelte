@@ -1,6 +1,6 @@
 <script>
 	import Nav from '../components/Nav.svelte';
-	import { beforeUpdate, onDestroy, setContext } from 'svelte'
+	import { onMount, onDestroy, setContext } from 'svelte'
 	import WalletController from 'lamden_wallet_controller';
 	import { walletInstalled, walletInfo, txResults } from '../stores'
 	import { approvalRequest } from '../wallet_approval'
@@ -11,7 +11,7 @@
 		sendTransaction: (transaction) => lwc.sendTransaction(transaction)
 	})
 
-	beforeUpdate(() => {
+	onMount(() => {
 		if (!lwc) initializeLWC()
 	})
 
@@ -21,7 +21,10 @@
 		lwc.events.on('txStatus', handleTxResults)
 
 		lwc.walletIsInstalled()
-			.then(installed => walletInstalled.set(installed))
+			.then(installed => {
+				if (installed) walletInstalled.set('installed')
+				else walletInstalled.set('not-installed')
+			})
 	}
 
 	onDestroy(() => {

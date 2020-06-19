@@ -14,17 +14,21 @@
 <script>
 	import { afterUpdate, getContext } from 'svelte'
 	import { walletInfo, userAccount, txResults } from '../../stores'
+	import { fly, fade } from 'svelte/transition';
+	import { quintOut, quintIn } from 'svelte/easing';
 
 	export let value;
 	export let user;
 
 	let receiver = "";
 	let amount = 0;
+	let sending = false;
 	let walletUser = $walletInfo ? $walletInfo.wallets[0] : "";
 
 	const { sendTransaction } = getContext('app_functions')
 
 	$: authenticatedUser = walletUser === user
+
 
 	afterUpdate(()=> {
 		walletUser = $walletInfo ? $walletInfo.wallets[0] : "";
@@ -41,6 +45,7 @@
 				amount
 			}
 		}
+		sending = true;
 		sendTransaction(transaction)
 	}
 
@@ -51,8 +56,8 @@
 	}
 
 	const handleTxResults = (data) => {
-		let status = data.txBlockResult.status
-		if (status === 0) {
+		let status = typeof data.txBlockResult.status === 'undefined'? 1 : data.txBlockResult.status;
+		if (status == 0) {
 			alert("You sent " + amount + " token(s)!");
 			refreshBalance();
 			clearInputs();
@@ -63,6 +68,7 @@
 		receiver = ""
 		amount = 0
 		txResults.set(undefined)
+		sending = false;
 	}
 
 	txResults.subscribe(results => results ? handleTxResults(results.data): null)
@@ -90,6 +96,11 @@
 		font-weight: 800;
 		line-height: 2.2;
 		letter-spacing: 1px;
+	}
+	p{
+		text-align: center;
+		font-size: 2em;
+		margin: 4em;
 	}
 	.balance{
 		font-size: 1.2em;
@@ -119,18 +130,27 @@
 	<img class="token-logo" src="wallet/icon.png" alt="token icon" />
 	<p class="balance"><strong>Token Balance: </strong>{value}</p>
 </div>
-
-<form on:submit|preventDefault={transfer} >
-	<fieldset disabled={!authenticatedUser}>
-		<h2 class:text-red={!authenticatedUser}>
-			{authenticatedUser
-			 ? "Enter Transfer Details"
-			 : "Please log in with the Lamden Wallet to enable transfers"}
-		</h2>
-		<label for="to">To</label>
-		<input type="text" name="to" bind:value={receiver} required="true"/>
-		<label for="amount">Token Amount</label>
-		<input type="number" name="amount" bind:value={amount} required="true"/>
-		<input class="button" type="submit" value="SEND"/>
-	</fieldset>
-</form>
+{#if sending}
+	<div in:fly="{{delay: 0, duration: 1000, x: -200, opacity: 0.0, easing: quintOut}}"
+	     out:fly="{{delay: 0, duration: 300, x: 200, opacity: 0.0, easing: quintIn}}">
+		<p>
+			{"... Sending Tokens ..."}
+		</p>
+	</div>
+{:else}
+	<form on:submit|preventDefault={transfer}
+		  in:fade="{{delay: 310, duration: 800,  opacity: 0.0, easing: quintOut}}">
+		<fieldset disabled={!authenticatedUser}>
+			<h2 class:text-red={!authenticatedUser}>
+				{authenticatedUser
+				 ? "Enter Transfer Details"
+				 : "Please log in with the Lamden Wallet to enable transfers"}
+			</h2>
+			<label for="to">To</label>
+			<input type="text" name="to" bind:value={receiver} required="true"/>
+			<label for="amount">Token Amount</label>
+			<input type="number" name="amount" bind:value={amount} required="true"/>
+			<input class="button" type="submit" value="SEND"/>
+		</fieldset>
+	</form>
+{/if}
