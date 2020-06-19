@@ -1,14 +1,11 @@
 <script>
 	import {goto} from '@sapper/app';
-	import {walletInstalled, walletInfo} from '../stores'
-	import App from "../node_modules/@sapper/internal/App.svelte";
+	import { walletInstalled, walletInfo } from '../stores'
 
 	$: account = $walletInfo ? $walletInfo.wallets[0] : undefined;
 	$: locked = $walletInfo ? $walletInfo.locked : undefined;
 
-	const login = () => {
-		goto('/users/' + account);
-	}
+	const login = () => goto('/users/' + account)
 
 </script>
 
@@ -63,7 +60,7 @@
      class:connected={account}
      class:not-connected={!account && !locked}>
 	{#if $walletInstalled}
-		{#if $walletInfo.locked}
+		{#if $walletInfo ? $walletInfo.locked : false}
 			<img class="lamden-logo" src="lamden_logo.png" alt="lamden logo" />
 			<p>Please unlock the Lamden Wallet</p>
 		{:else}

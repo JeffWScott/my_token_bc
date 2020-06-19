@@ -1,35 +1,45 @@
 <script>
 	import Nav from '../components/Nav.svelte';
-	import { beforeUpdate } from 'svelte'
-	import { goto } from '@sapper/app';
+	import { beforeUpdate, onDestroy, setContext } from 'svelte'
 	import WalletController from 'lamden_wallet_controller';
-	import { walletController, walletInstalled, walletInfo } from '../stores'
+	import { walletInstalled, walletInfo, txResults } from '../stores'
 	import { approvalRequest } from '../wallet_approval'
 
-	beforeUpdate(() => {
-		if (!$walletController) getWalletController()
+	let lwc;
+
+	setContext('app_functions', {
+		sendTransaction: (transaction) => lwc.sendTransaction(transaction)
 	})
 
-	const getWalletController = () => {
-		walletController.set(new WalletController())
+	beforeUpdate(() => {
+		if (!lwc) initializeLWC()
+	})
 
-		$walletController.walletIsInstalled()
-				.then(installed => walletInstalled.set(installed))
+	const initializeLWC = () => {
+		lwc = new WalletController()
+		lwc.events.on('newInfo', handleWalletInfo)
+		lwc.events.on('txStatus', handleTxResults)
 
-		$walletController.events.on('newInfo', handleWalletInfo)
+		lwc.walletIsInstalled()
+			.then(installed => walletInstalled.set(installed))
 	}
+
+	onDestroy(() => {
+		if (lwc) {
+			lwc.events.removeListener(handleWalletInfo)
+			lwc.events.removeListener(handleTxResults)
+		}
+	})
 
 	const handleWalletInfo = (info) => {
 		if (info.errors){
-			if (info.errors[0].includes('lamdenWalletConnect')) sendApprovalRequest()
+			if (info.errors[0].includes('lamdenWalletConnect')) lwc.sendConnection(approvalRequest)
 		}else{
 			walletInfo.set(info)
 		}
 	}
 
-	const sendApprovalRequest = () => {
-		$walletController.sendConnection(approvalRequest)
-	}
+	const handleTxResults = (results) => txResults.set(results)
 </script>
 
 <style>

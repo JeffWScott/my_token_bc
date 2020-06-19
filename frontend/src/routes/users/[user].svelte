@@ -2,20 +2,18 @@
 	export async function preload({ params, query }) {
 		const res = await this.fetch("http://167.172.126.5:18080/contracts/con_jeff_token/S?key=" + params.user)
 		const data = await res.json();
-		console.log(data)
-		console.log(typeof data.value)
-		console.log(data.value === null)
 		if (typeof data.value === 'undefined') this.error(res.status, data.message);
 		if (data.value === null) data.value = 0;
-		return {value: data.value, user: params.user};
+		return {
+			value: data.value,
+			user: params.user
+		};
 	}
 </script>
 
 <script>
-	import { goto } from '@sapper/app';
-	import { onMount, afterUpdate } from 'svelte'
-
-	import { walletController, walletInfo, userAccount } from '../../stores'
+	import { afterUpdate, getContext } from 'svelte'
+	import { walletInfo, userAccount, txResults } from '../../stores'
 
 	export let value;
 	export let user;
@@ -24,15 +22,9 @@
 	let amount = 0;
 	let walletUser = $walletInfo ? $walletInfo.wallets[0] : "";
 
-	$: authenticatedUser = walletUser === user
+	const { sendTransaction } = getContext('app_functions')
 
-	onMount(() => {
-		$walletController.events.on('txStatus', handleTxResults)
-		return () => {
-			userAccount.set("")
-			$walletController.events.removeListener(handleTxResults)
-		}
-	})
+	$: authenticatedUser = walletUser === user
 
 	afterUpdate(()=> {
 		walletUser = $walletInfo ? $walletInfo.wallets[0] : "";
@@ -49,21 +41,7 @@
 				amount
 			}
 		}
-
-		$walletController.sendTransaction(transaction)
-	}
-
-	const handleTxResults = (txResult) => {
-		let status = txResult.data.txBlockResult.status
-		if (status === 0) {
-			alert("You sent " + amount + " token(s)!");
-			refreshBalance();
-			clearInputs();
-		}else{
-			if (typeof status !== 'undefined') {
-				alert("There was an issue sending the tokens");
-			}
-		}
+		sendTransaction(transaction)
 	}
 
 	const refreshBalance = async () => {
@@ -72,15 +50,22 @@
 		value = data.value;
 	}
 
+	const handleTxResults = (data) => {
+		let status = data.txBlockResult.status
+		if (status === 0) {
+			alert("You sent " + amount + " token(s)!");
+			refreshBalance();
+			clearInputs();
+		}
+	}
+
 	const clearInputs = () => {
 		receiver = ""
 		amount = 0
+		txResults.set(undefined)
 	}
 
-	const logout = () => {
-	    console.log('logging out')
-		goto(`.`);
-	}
+	txResults.subscribe(results => results ? handleTxResults(results.data): null)
 </script>
 
 <style>
@@ -99,10 +84,6 @@
 	input{
 		width: 100%;
 		margin-bottom: 1rem;
-	}
-
-	h1{
-		text-transform: capitalize;
 	}
 	fieldset > h2{
 		margin: 0 0 0.5em 0;

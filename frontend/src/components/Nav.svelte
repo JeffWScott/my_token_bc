@@ -1,25 +1,13 @@
 <script>
-	import { walletController, userAccount } from '../stores'
-	import { onMount, beforeUpdate } from 'svelte'
+	import { userAccount, txResults } from '../stores'
+	import { beforeUpdate } from 'svelte'
 	import { goto } from '@sapper/app';
 
 	let tauAmount = 0;
 
-	onMount(() => {
-		$walletController.events.on('txStatus', updateTau)
-		return () => {
-			$walletController.events.removeListener(updateTau)
-		}
-	})
-
 	beforeUpdate(() => {
 		if ($userAccount) refreshTAUBalance()
 	})
-
-	const updateTau = (txResult) => {
-		let status = txResult.data.txBlockResult.status
-		if (status === 0) refreshTAUBalance();
-	}
 
 	const refreshTAUBalance = async () => {
 		const res = await fetch("http://167.172.126.5:18080/contracts/currency/balances?key=" + $userAccount)
@@ -28,7 +16,14 @@
 		else tauAmount = data.value;
 	}
 
+	const updateTau = (data) => {
+		let status = data.txBlockResult.status
+		if (status === 0) refreshTAUBalance();
+	}
+	txResults.subscribe(results => results ? updateTau(results.data): null)
+
 	const logout = () => {
+		userAccount.set("")
 		goto(`.`);
 	}
 
@@ -68,8 +63,8 @@
 		line-height: 1.2;
 		text-align: right;
 	}
-	.account > div > strong {
-		font-size: 1.2em;
+	.account > div > p > strong {
+		font-size: 1em;
 	}
 	.account > div {
 		width: 50%;
