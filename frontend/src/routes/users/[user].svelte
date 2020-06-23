@@ -1,3 +1,5 @@
+<!-- /frontend/src/routes/users/[user].svelte -->
+
 <script context="module">
 	export async function preload({ params, query }) {
 		const res = await this.fetch("http://167.172.126.5:18080/contracts/con_jeff_token/S?key=" + params.user)
@@ -23,15 +25,15 @@
 	let receiver = "";
 	let amount = 0;
 	let sending = false;
-	let walletUser = $walletInfo ? $walletInfo.wallets[0] : "";
+	let txResultMessage = ""
+	let walletUser = $walletInfo.wallets ? $walletInfo.wallets[0] : "";
 
 	const { sendTransaction } = getContext('app_functions')
 
 	$: authenticatedUser = walletUser === user
 
-
 	afterUpdate(()=> {
-		walletUser = $walletInfo ? $walletInfo.wallets[0] : "";
+		walletUser = $walletInfo.wallets ? $walletInfo.wallets[0] : "";
 		userAccount.set(user)
 	})
 
@@ -46,6 +48,7 @@
 			}
 		}
 		sending = true;
+		txResultMessage = "... Sending Tokens ..."
 		sendTransaction(transaction)
 	}
 
@@ -55,23 +58,31 @@
 		value = data.value;
 	}
 
-	const handleTxResults = (data) => {
-		let status = typeof data.txBlockResult.status === 'undefined'? 1 : data.txBlockResult.status;
-		if (status == 0) {
-			alert("You sent " + amount + " token(s)!");
-			refreshBalance();
-			clearInputs();
+	const processTxResults = (data) => {
+		if (typeof data.txBlockResult.status !== 'undefined'){
+			if (data.txBlockResult.status == 0) {
+				txResultMessage = "You sent " + amount + " token(s)!";
+				refreshBalance();
+				clearInputs();
+			}else{
+				txResultMessage = "There was a problem sending your transaction :(";
+			}
 		}
 	}
 
 	const clearInputs = () => {
 		receiver = ""
 		amount = 0
-		txResults.set(undefined)
-		sending = false;
+		txResults.set({})
+		setTimeout(() => {
+			sending = false;
+			txResultMessage = ""
+		}, 2000)
 	}
 
-	txResults.subscribe(results => results ? handleTxResults(results.data): null)
+	txResults.subscribe(results => {
+		if (results.data) processTxResults(results.data)
+	})
 </script>
 
 <style>
@@ -133,9 +144,7 @@
 {#if sending}
 	<div in:fly="{{delay: 0, duration: 1000, x: -200, opacity: 0.0, easing: quintOut}}"
 	     out:fly="{{delay: 0, duration: 300, x: 200, opacity: 0.0, easing: quintIn}}">
-		<p>
-			{"... Sending Tokens ..."}
-		</p>
+		<p>{txResultMessage}</p>
 	</div>
 {:else}
 	<form on:submit|preventDefault={transfer}

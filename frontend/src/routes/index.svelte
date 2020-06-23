@@ -1,3 +1,5 @@
+<!-- /frontend/src/routes/index.svelte -->
+
 <script>
 	import {goto} from '@sapper/app';
 	import { onMount } from 'svelte'
@@ -5,15 +7,9 @@
 	import { quintOut } from 'svelte/easing';
 	import { walletInstalled, walletInfo } from '../stores'
 
-	$: account = $walletInfo ? $walletInfo.wallets[0] : undefined;
-	$: locked = $walletInfo ? $walletInfo.locked : undefined;
+	$: account = $walletInfo.wallets ? $walletInfo.wallets[0] : undefined;
+	$: locked = $walletInfo.locked ? $walletInfo.locked : undefined;
 	$: installed = $walletInstalled
-
-	onMount(() => {
-		setTimeout(() => {
-
-		}, 1000)
-	})
 
 	const login = () => goto('/users/' + account)
 
@@ -73,10 +69,12 @@
 		 in:fly="{{delay: 300, duration: 500, y: 100, opacity: 0.0, easing: quintOut}}">
 
 		{#if $walletInstalled === 'installed'}
-			{#if locked}
+			{#if $walletInfo.locked == true}
 				<img class="lamden-logo" src="lamden_logo.png" alt="lamden logo" />
 				<p>Please unlock the Lamden Wallet</p>
-			{:else}
+				<a href="chrome-extension://hiknponkciemeacgombejeookoebjdoe">UNLOCK</a>
+			{/if}
+			{#if $walletInfo.locked == false}
 				<form on:submit|preventDefault={login}>
 					<div class="wallet-connected">
 						<img class="lamden-logo" src="lamden_logo.png" alt="lamden logo" />
@@ -85,6 +83,9 @@
 					<p class="account"><strong>Account Address: </strong>{account}</p>
 					<input class="button" type="submit" value="sign in" />
 				</form>
+			{/if}
+			{#if $walletInfo.locked == undefined}
+				<h2>Please Approve My Token website!</h2>
 			{/if}
 		{/if}
 

@@ -1,21 +1,15 @@
+<!-- /frontend/src/routes/_layout.svelte -->
+
 <script>
 	import Nav from '../components/Nav.svelte';
-	import { onMount, onDestroy, setContext } from 'svelte'
+	import { onMount, setContext } from 'svelte'
 	import WalletController from 'lamden_wallet_controller';
 	import { walletInstalled, walletInfo, txResults } from '../stores'
 	import { approvalRequest } from '../wallet_approval'
 
 	let lwc;
 
-	setContext('app_functions', {
-		sendTransaction: (transaction) => lwc.sendTransaction(transaction)
-	})
-
 	onMount(() => {
-		if (!lwc) initializeLWC()
-	})
-
-	const initializeLWC = () => {
 		lwc = new WalletController()
 		lwc.events.on('newInfo', handleWalletInfo)
 		lwc.events.on('txStatus', handleTxResults)
@@ -25,13 +19,15 @@
 				if (installed) walletInstalled.set('installed')
 				else walletInstalled.set('not-installed')
 			})
-	}
 
-	onDestroy(() => {
-		if (lwc) {
+		return () => {
 			lwc.events.removeListener(handleWalletInfo)
 			lwc.events.removeListener(handleTxResults)
 		}
+	})
+
+	setContext('app_functions', {
+		sendTransaction: (transaction) => lwc.sendTransaction(transaction)
 	})
 
 	const handleWalletInfo = (info) => {

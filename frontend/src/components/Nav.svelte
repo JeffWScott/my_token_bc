@@ -17,11 +17,16 @@
 	}
 
 	const updateTau = (data) => {
-		console.log(data)
-		let status = data.txBlockResult.status
-		if (status === 0) refreshTAUBalance();
+		if (typeof data.txBlockResult.status !== 'undefined'){
+			if (data.txBlockResult.status == 0) {
+				if (status === 0) refreshTAUBalance();
+			}
+		}
 	}
-	txResults.subscribe(results => results ? updateTau(results.data): null)
+
+	txResults.subscribe(results => {
+		if (results.data) updateTau(results.data)
+	})
 
 	const logout = () => {
 		userAccount.set("")
