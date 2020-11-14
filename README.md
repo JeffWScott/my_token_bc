@@ -22,3 +22,12 @@ npm install
 npm run dev
 ```
 
+- change wallet [connection information](https://docs.lamden.io/docs/develop/wallet_api/create_connection):
+
+edit `frontend/src/wallet_approval.js`
+
+
+
+
+
+
