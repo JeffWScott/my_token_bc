@@ -79,6 +79,7 @@ input:invalid {
 	justify-content: space-between;
 	border: 1px solid grey;
 	width: 100%;
+	min-width: fit-content;
 	padding: 2rem 50px;
 	background-color: white;
 	border-radius: 5px;

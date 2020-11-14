@@ -10,7 +10,7 @@
 	let lwc;
 
 	onMount(() => {
-		lwc = new WalletController()
+		lwc = new WalletController(approvalRequest)
 		lwc.events.on('newInfo', handleWalletInfo)
 		lwc.events.on('txStatus', handleTxResults)
 
@@ -27,15 +27,12 @@
 	})
 
 	setContext('app_functions', {
-		sendTransaction: (transaction) => lwc.sendTransaction(transaction)
+		sendTransaction: (transaction, callback) => lwc.sendTransaction(transaction, callback)
 	})
 
 	const handleWalletInfo = (info) => {
-		if (info.errors){
-			if (info.errors[0].includes('lamdenWalletConnect')) lwc.sendConnection(approvalRequest)
-		}else{
-			walletInfo.set(info)
-		}
+		console.log(info)
+		if (!info.errors) walletInfo.set(info)
 	}
 
 	const handleTxResults = (results) => txResults.set(results)

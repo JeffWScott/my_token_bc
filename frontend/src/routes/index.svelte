@@ -53,7 +53,7 @@
 		border: 3px solid #c71313;
 	}
 	.not-connected{
-		background: #fff;
+		background: #ffffff;
 	}
 </style>
 

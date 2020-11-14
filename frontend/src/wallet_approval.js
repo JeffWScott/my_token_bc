@@ -2,7 +2,7 @@
 
 const approvalRequest = {
     appName: 'JEFF TOKEN',
-    description: 'Welcome to the only site on the internet where you can trade JEFF TOKEN! Please approve this site to start trading!',
+    version: '0.0.1',
     contractName: 'con_jeff_token',
     networkType: 'testnet'
 }

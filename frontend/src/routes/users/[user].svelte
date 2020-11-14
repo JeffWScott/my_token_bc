@@ -1,11 +1,15 @@
 <!-- /frontend/src/routes/users/[user].svelte -->
 
 <script context="module">
+	let masternode = "https://testnet-master-1.lamden.io"
+
 	export async function preload({ params, query }) {
-		const res = await this.fetch("http://167.172.126.5:18080/contracts/con_jeff_token/S?key=" + params.user)
+		const res = await this.fetch(`${masternode}/contracts/con_jeff_token/S?key=${params.user}`)
 		const data = await res.json();
 		if (typeof data.value === 'undefined') this.error(res.status, data.message);
 		if (data.value === null) data.value = 0;
+		if (data.value.__fixed__) data.value = parseFloat(data.value.__fixed__)
+		data.value = parseFloat(data.value);
 		return {
 			value: data.value,
 			user: params.user
@@ -41,7 +45,7 @@
 		const transaction = {
 			methodName: 'transfer',
 			networkType: 'testnet',
-			stampLimit: 50000,
+			stampLimit: 50,
 			kwargs: {
 				receiver,
 				amount
@@ -49,25 +53,34 @@
 		}
 		sending = true;
 		txResultMessage = "... Sending Tokens ..."
-		sendTransaction(transaction)
+		sendTransaction(transaction, doneSending)
+		setTimeout(() => {
+			txResultMessage = "There was a problem sending your transaction :(";
+			sending = false
+			clearInputs()
+		}, 10000)
 	}
 
-	const refreshBalance = async () => {
-		const res = await fetch("http://167.172.126.5:18080/contracts/con_jeff_token/S?key=" + user)
-		const data = await res.json();
-		value = data.value;
-	}
-
-	const processTxResults = (data) => {
-		if (typeof data.txBlockResult.status !== 'undefined'){
-			if (data.txBlockResult.status == 0) {
+	const doneSending = (result) => {
+		console.log(result)
+		let txResults = result.data
+		if (!txResults.errors){
+			if (txResults.txBlockResult.status === 0) {
 				txResultMessage = "You sent " + amount + " token(s)!";
 				refreshBalance();
 				clearInputs();
-			}else{
-				txResultMessage = "There was a problem sending your transaction :(";
 			}
+		}else{
+			txResultMessage = "There was a problem sending your transaction :(";
 		}
+	}
+
+	const refreshBalance = async () => {
+		const res = await fetch(`${masternode}/contracts/con_jeff_token/S?key=${user}`)
+		const data = await res.json();
+		if (!data.value) value = 0
+		if (data.value.__fixed__) value = parseFloat(data.value.__fixed__)
+		value = parseFloat(data.value);
 	}
 
 	const clearInputs = () => {
@@ -80,9 +93,6 @@
 		}, 2000)
 	}
 
-	txResults.subscribe(results => {
-		if (results.data) processTxResults(results.data)
-	})
 </script>
 
 <style>

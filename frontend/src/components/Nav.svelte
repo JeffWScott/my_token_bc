@@ -4,16 +4,18 @@
 	import { goto } from '@sapper/app';
 
 	let tauAmount = 0;
+	let masternode = "https://testnet-master-1.lamden.io"
 
 	beforeUpdate(() => {
 		if ($userAccount) refreshTAUBalance()
 	})
 
 	const refreshTAUBalance = async () => {
-		const res = await fetch("http://167.172.126.5:18080/contracts/currency/balances?key=" + $userAccount)
+		const res = await fetch(`${masternode}/contracts/currency/balances?key=${$userAccount}`)
 		const data = await res.json();
 		if (!data.value) tauAmount = 0
-		else tauAmount = data.value;
+		if (data.value.__fixed__) tauAmount = parseFloat(data.value.__fixed__)
+		else tauAmount = parseFloat(data.value);
 	}
 
 	const updateTau = (data) => {
